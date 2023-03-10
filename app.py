@@ -51,7 +51,45 @@ toy_schema = ToySchema()
 toys_schema = ToySchema(many=True)
 
 # Resources
-
+class ToyListResource(Resource):
+    def get(self):
+        all_toys = Toy.query.all()
+        return toys_schema.dump(all_toys)
+    
+    def post(self):
+        form_data = request.get_json()
+        try:
+            new_toy = toy_schema.load(form_data)
+            db.session.add(new_toy)
+            db.session.commit()
+            return toy_schema.dump(new_toy), 201
+        except ValidationError as err:
+            return err.messages, 400
+        
+class ToyResource(Resource):
+    def get(self, toy_id):
+        toy_from_db = Toy.query.get_or_404(toy_id)
+        return toy_schema.dump(toy_from_db)
+    
+    def delete(self, toy_id):
+        toy_from_db = Toy.query.get_or_404(toy_id)
+        db.session.delete(toy_from_db)
+        return '', 204
+    
+    def put(self, toy_id):
+        toy_from_db = Toy.query.get_or_404(toy_id)
+        if 'name' in request.json:
+            toy_from_db.name=request.json['name']
+        if 'description' in request.json:
+            toy_from_db.description=request.json['description']
+        if 'price' in request.json:
+            toy_from_db.price=request.json['price']
+        if 'inventory_quantity' in request.json:
+            toy_from_db.inventory_quantity=request.json['inventory_quantity']
+        db.session.commit()
+        return toy_schema.dump(toy_from_db)
 
 
 # Routes
+api.add_resource(ToyListResource, '/api/products/')
+api.add_resource(ToyResource, '/api/products/<int:pk>')
