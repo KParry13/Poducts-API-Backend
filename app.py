@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from dotenv import load_dotenv
 from os import environ
-
+from marshmallow import post_load, fields, ValidationError
 load_dotenv()
 
 # Create App instance
@@ -35,8 +35,20 @@ class Toy(db.Model):
 
 # Schemas
 class ToySchema(ma.Schema):
-    pass
+    id = fields.Integer(primary_key=True)
+    name = fields.String(required=True)
+    description = fields.String(required=True)
+    price = fields.Float()
+    inventory_quantity = fields.Integer()
+    class Meta:
+        fields = ("id", "name", "description", "price", "inventory_quantity")
 
+    @post_load
+    def create_toy(self, data, **kwargs):
+        return Toy(**data)
+    
+toy_schema = ToySchema()
+toys_schema = ToySchema(many=True)
 
 # Resources
 
