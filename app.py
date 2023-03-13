@@ -54,7 +54,7 @@ toys_schema = ToySchema(many=True)
 class ToyListResource(Resource):
     def get(self):
         all_toys = Toy.query.all()
-        return toys_schema.dump(all_toys)
+        return toys_schema.dump(all_toys), 200
     
     def post(self):
         form_data = request.get_json()
@@ -64,20 +64,20 @@ class ToyListResource(Resource):
             db.session.commit()
             return toy_schema.dump(new_toy), 201
         except ValidationError as err:
-            return err.messages, 400
+            return err.messages, 201
         
 class ToyResource(Resource):
-    def get(self, toy_id):
-        toy_from_db = Toy.query.get_or_404(toy_id)
+    def get(self, pk):
+        toy_from_db = Toy.query.get_or_404(pk)
         return toy_schema.dump(toy_from_db)
     
-    def delete(self, toy_id):
-        toy_from_db = Toy.query.get_or_404(toy_id)
+    def delete(self, pk):
+        toy_from_db = Toy.query.get_or_404(pk)
         db.session.delete(toy_from_db)
         return '', 204
     
-    def put(self, toy_id):
-        toy_from_db = Toy.query.get_or_404(toy_id)
+    def put(self, pk):
+        toy_from_db = Toy.query.get_or_404(pk)
         if 'name' in request.json:
             toy_from_db.name=request.json['name']
         if 'description' in request.json:
